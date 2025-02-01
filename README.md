@@ -10,6 +10,13 @@ pip install jupyterlab numpy matplotlib scipy scikit-image wave  portaudio19-dev
 jupyter lab
 ```
 
+```bat
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install jupyterlab numpy matplotlib scipy scikit-image wave pyaudio pydub
+jupyter lab
+```
+
 ## 参考
 
 - [Pythonでスペクトル解析【音声認識実践その1】](https://www.itd-blog.jp/entry/voice-recognition-10)
