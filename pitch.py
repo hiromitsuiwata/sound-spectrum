@@ -28,35 +28,37 @@ class Graph:
     def set_raw_data(self, raw_data):
         self.raw_data = raw_data
 
-def callback(in_data, frame_count, time_info, status):
-    raw_data = np.frombuffer(in_data, dtype=np.float32)
-    graph.set_raw_data(raw_data)
-    return (in_data, pyaudio.paContinue)
+class MyAudio:
 
-def audio_processing_thread():
-    print("Start audio processing thread")
-    # PyAudioの設定
-    audio = pyaudio.PyAudio()
-    stream = audio.open(format=FORMAT,
-                channels=CHANNELS,
-                rate=SAMPLE_RATE,
-                input=True,
-                output=True,
-                frames_per_buffer=CHUNK,
-                stream_callback=callback)
-    stream.start_stream()
-    while stream.is_active():
-        pass
+    def callback(in_data, frame_count, time_info, status):
+        raw_data = np.frombuffer(in_data, dtype=np.float32)
+        graph.set_raw_data(raw_data)
+        return (in_data, pyaudio.paContinue)
+
+    def audio_processing_thread():
+        print("Start audio processing thread")
+        # PyAudioの設定
+        audio = pyaudio.PyAudio()
+        stream = audio.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=SAMPLE_RATE,
+                    input=True,
+                    output=True,
+                    frames_per_buffer=CHUNK,
+                    stream_callback=MyAudio.callback)
+        stream.start_stream()
+        while stream.is_active():
+            pass
+
+    def start_audio():
+        processing_thread = threading.Thread(target=MyAudio.audio_processing_thread, daemon=True)
+        processing_thread.start()
 
 if __name__ == "__main__":
     graph = Graph()
-
-    processing_thread = threading.Thread(target=audio_processing_thread, daemon=True)
-    processing_thread.start()
+    MyAudio.start_audio()
 
     try:
-        # while True:
-        #     pass
         plt.show()
     except KeyboardInterrupt:
         print("Interrupted")
