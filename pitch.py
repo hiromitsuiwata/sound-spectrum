@@ -8,21 +8,29 @@ from matplotlib.animation import FuncAnimation
 
 SAMPLE_RATE = 44100
 CHUNK = 1024
-FORMAT = pyaudio.paFloat32
 CHANNELS = 1
-line: Line2D = None
-raw_data = np.zeros(CHUNK)
-ani = None
+FORMAT = pyaudio.paFloat32
 
-   
-def update_plot(i):
-    global raw_data
-    line.set_ydata(raw_data)
+class Graph:
+    def __init__(self):
+        self.raw_data = np.zeros(CHUNK)
+        self.line = None
+        fig = plt.figure()
+        ax1 = fig.add_subplot(111)
+        x = np.arange(0, CHUNK)
+        ax1.set_title("Realtime audio wave")
+        self.line, = ax1.plot(x, self.raw_data)
+        self.ani = FuncAnimation(fig, self.__update_plot, cache_frame_data=False)
+
+    def __update_plot(self, _):
+        self.line.set_ydata(self.raw_data)
+    
+    def set_raw_data(self, raw_data):
+        self.raw_data = raw_data
 
 def callback(in_data, frame_count, time_info, status):
-    # print("callback")
-    global raw_data
     raw_data = np.frombuffer(in_data, dtype=np.float32)
+    graph.set_raw_data(raw_data)
     return (in_data, pyaudio.paContinue)
 
 def audio_processing_thread():
@@ -40,16 +48,8 @@ def audio_processing_thread():
     while stream.is_active():
         pass
 
-def init_graph():
-    global line, ani
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    x = np.arange(0, CHUNK)
-    line, = ax.plot(x, np.zeros(CHUNK))
-    ani = FuncAnimation(fig, update_plot, save_count=10, cache_frame_data=False)
-
 if __name__ == "__main__":
-    init_graph()
+    graph = Graph()
 
     processing_thread = threading.Thread(target=audio_processing_thread, daemon=True)
     processing_thread.start()
